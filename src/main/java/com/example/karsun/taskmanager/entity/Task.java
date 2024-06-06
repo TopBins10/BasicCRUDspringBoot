@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import jakarta.validation.constraints.NotBlank;
-
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -14,7 +13,6 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tasks")
 public class Task {
