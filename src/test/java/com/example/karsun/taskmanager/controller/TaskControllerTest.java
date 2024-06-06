@@ -1,6 +1,7 @@
 package com.example.karsun.taskmanager.controller;
 
 import java.time.LocalDate;
+import java.util.NoSuchElementException;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -112,6 +114,14 @@ public class TaskControllerTest {
     }
 
     @Test
+    public void getTaskByIdFail() throws Exception {
+        when(taskService.getTaskById(1L)).thenReturn(java.util.Optional.empty());
+
+        mockMvc.perform(get("/tasks/1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     public void getAllTasks() throws Exception {
         when(taskService.getAllTasks()).thenReturn(java.util.List.of(task, task2));
 
@@ -120,6 +130,15 @@ public class TaskControllerTest {
                 .andExpect(jsonPath("$[0].id", Matchers.is(1)))
                 .andExpect(jsonPath("$[1].id", Matchers.is(2)))
                 .andExpect(jsonPath("$[0].title", Matchers.is("Test Task")));
+    }
+
+    @Test
+    public void getAllTasksEmpty() throws Exception {
+        when(taskService.getAllTasks()).thenReturn(java.util.List.of());
+
+        mockMvc.perform(get("/tasks"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 
     @Test
@@ -134,6 +153,16 @@ public class TaskControllerTest {
     }
 
     @Test
+    public void updateTaskFailTest() throws Exception {
+        when(taskService.updateTask(anyLong(), any(Task.class))).thenReturn(null);
+
+        mockMvc.perform(put("/tasks/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(task2)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     public void deleteTask() throws Exception {
         doNothing().when(taskService).deleteTask(1L);
         when(taskService.getTaskById(1L)).thenReturn(java.util.Optional.of(task));
@@ -141,6 +170,19 @@ public class TaskControllerTest {
         mockMvc.perform(delete("/tasks/1"))
                 .andExpect(status().isNoContent());
         verify(taskService, times(1)).deleteTask(1L);
+    }
+
+    @Test
+    public void deleteTaskFail() throws Exception {
+        when(taskService.getTaskById(1L)).thenReturn(java.util.Optional.empty());
+        doThrow(new NoSuchElementException()).when(taskService).deleteTask(1L);
+    
+        assertThrows(NoSuchElementException.class, () -> {
+            taskService.getTaskById(1L).get();
+        });
+    
+        mockMvc.perform(delete("/tasks/1"))
+                .andExpect(status().isNotFound());
     }
 
 }

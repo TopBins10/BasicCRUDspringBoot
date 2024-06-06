@@ -3,6 +3,7 @@ package com.example.karsun.taskmanager.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
@@ -139,13 +140,17 @@ public class TaskServiceTest {
     @Test
     public void testFailDeleteTask(){
         when(taskRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        taskService.deleteTask(1L);
-
-        assertThrows(NoSuchElementException.class, () -> {
-            taskService.getTaskById(1L).get();
+        
+        Exception exception = assertThrows(NoSuchElementException.class, () -> {
+            taskService.deleteTask(1L); // Second call to deleteTask, where exception is expected
         });
 
-        verify(taskRepository, times(1)).deleteById(1L);
+        String expectedMessage = "No value present";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
+
+        verify(taskRepository, times(1)).findById(1L);
+        verify(taskRepository, times(0)).deleteById(1L);
     }
 }
