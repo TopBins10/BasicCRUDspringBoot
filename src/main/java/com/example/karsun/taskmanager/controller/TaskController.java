@@ -3,6 +3,7 @@ package com.example.karsun.taskmanager.controller;
 import com.example.karsun.taskmanager.entity.Task;
 import com.example.karsun.taskmanager.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,8 +21,15 @@ public class TaskController {
     // Create a new task
     @PostMapping
     public ResponseEntity<Task> createTask(@Valid @RequestBody Task task) {
+        if (task.getId() != null && taskService.getTaskById(task.getId()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
         Task createdTask = taskService.createTask(task);
+        if (createdTask == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
         return ResponseEntity.ok(createdTask);
+
     }
 
     // Get a task by ID

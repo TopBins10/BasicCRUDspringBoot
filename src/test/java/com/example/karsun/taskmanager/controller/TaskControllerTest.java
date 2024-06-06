@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import com.example.karsun.taskmanager.entity.Task;
@@ -34,10 +35,12 @@ public class TaskControllerTest {
 
     private Task task;
     private Task task2;
+    private Task taskDupe;
 
     @BeforeEach
     void setUp() {
         task = new Task(1L, "Test Task", "Test Description", "OPEN", LocalDate.now(), "HIGH");
+        taskDupe = new Task(1L, "Test Task Duplicate", "Duplicate description", "OPEN", LocalDate.now(), "HIGH");
         task2 = new Task(2L, "Test Task 2", "Test Description 2", "OPEN", LocalDate.now(), "LOW");
     }
 
@@ -52,6 +55,51 @@ public class TaskControllerTest {
                 .andExpect(jsonPath("$.id", Matchers.is(1)))
                 .andExpect(jsonPath("$.title", Matchers.is("Test Task")));
     }
+
+    @Test
+    public void createTaskFailNull() throws Exception {
+        when(taskService.createTask(any(Task.class))).thenReturn(null);
+
+        mockMvc.perform(post("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(task)))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    public void createTaskFailNullDupe() throws Exception {
+            // Arrange
+        // First task creation should succeed
+        when(taskService.createTask(any(Task.class))).thenAnswer(invocation -> {
+            Task argTask = invocation.getArgument(0);
+            if (argTask.getTitle().equals("Test Task")) {
+                return task;
+            } else {
+                return taskDupe;
+            }
+        });
+
+        // First request to getTaskById should return empty
+        when(taskService.getTaskById(1L)).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        // First request should succeed
+        mockMvc.perform(post("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(task)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", Matchers.is(1)))
+                .andExpect(jsonPath("$.title", Matchers.is("Test Task")));
+
+        // Simulate the task now existing in the database
+        when(taskService.getTaskById(1L)).thenReturn(java.util.Optional.of(task));
+
+        // Second request should fail with conflict status
+        mockMvc.perform(post("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(taskDupe)))
+                .andExpect(status().isConflict());
+        }
 
     @Test
     public void getTaskById() throws Exception {
