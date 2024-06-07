@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import DeleteTask from '../DeleteTask';
 import UpdateTask from '../UpdateTask';
 
@@ -40,6 +41,9 @@ const ListTasks = () => {
     return (
         <div>
             <h1>Tasks</h1>
+            <Link to="/add-task">
+                <button>Add Task</button>
+            </Link>
             <ul>
                 {tasks.map(task => (
                     <li key={task.id}>

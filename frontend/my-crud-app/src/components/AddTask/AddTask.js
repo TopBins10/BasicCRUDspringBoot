@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Link } from 'react-router-dom';
 
 // The AddTask component allows users to add new tasks through a form
 const AddTask = () => {
@@ -47,6 +48,9 @@ const AddTask = () => {
 
     return (
         <div>
+            <Link to="/">
+                <button>Home</button>
+            </Link>
             <h1>Add Task</h1>
             {/* Form for adding a new task */}
             <form onSubmit={handleSubmit}>
