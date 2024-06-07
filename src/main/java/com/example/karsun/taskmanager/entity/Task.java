@@ -1,6 +1,7 @@
 package com.example.karsun.taskmanager.entity;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "tasks")
 public class Task {
     @Id
