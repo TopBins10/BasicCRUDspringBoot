@@ -1,6 +1,8 @@
 package com.example.karsun.taskmanager.controller;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.hamcrest.Matchers;
@@ -185,4 +187,40 @@ public class TaskControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    public void testCRUDOperations() throws Exception {
+        // Create tasks
+        for (int i = 1; i <= 10; i++) {
+            Task task = new Task((long) i, "Test Task " + i, "Test Description " + i, "OPEN", LocalDate.now(), "HIGH");
+            when(taskService.createTask(any(Task.class))).thenReturn(task);
+
+            mockMvc.perform(post("/tasks")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(task)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id", Matchers.is(i)))
+                    .andExpect(jsonPath("$.title", Matchers.is("Test Task " + i)));
+        }
+
+        // Delete tasks
+        for (int i = 1; i <= 5; i++) {
+            doNothing().when(taskService).deleteTask((long) i);
+            when(taskService.getTaskById((long) i)).thenReturn(java.util.Optional.of(new Task((long) i, "Test Task " + i, "Test Description " + i, "OPEN", LocalDate.now(), "HIGH")));
+
+            mockMvc.perform(delete("/tasks/" + i))
+                    .andExpect(status().isNoContent());
+            verify(taskService, times(1)).deleteTask((long) i);
+        }
+
+        // Check remaining tasks
+        List<Task> remainingTasks = new ArrayList<>();
+        for (int i = 6; i <= 10; i++) {
+            remainingTasks.add(new Task((long) i, "Test Task " + i, "Test Description " + i, "OPEN", LocalDate.now(), "HIGH"));
+        }
+        when(taskService.getAllTasks()).thenReturn(remainingTasks);
+
+        mockMvc.perform(get("/tasks"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", Matchers.hasSize(5)));
+    }
 }
