@@ -1,101 +1,105 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
 
-// UpdateTask component: Handles updating an existing task
-const UpdateTask = ({ task, onUpdate }) => {
-    // Initialize state variables for each task field
-    const [title, setTitle] = useState(task.title);
-    const [description, setDescription] = useState(task.description);
-    const [status, setStatus] = useState(task.status);
-    const [dueDate, setDueDate] = useState(task.dueDate);
-    const [priority, setPriority] = useState(task.priority);
+const UpdateTask = () => {
+    const { id } = useParams();
+    const [task, setTask] = useState({
+        title: "",
+        description: "",
+        status: "",
+        dueDate: "",
+        priority: "",
+    });
+    const navigate = useNavigate();
 
-    // useEffect hook: Updates state variables when the task prop changes
     useEffect(() => {
-        setTitle(task.title);
-        setDescription(task.description);
-        setStatus(task.status);
-        setDueDate(task.dueDate);
-        setPriority(task.priority);
-    }, [task]);
-
-    // handleSubmit function: Handles form submission for updating the task
-    const handleSubmit = (event) => {
-        event.preventDefault(); // Prevent default form submission behavior
-        // Create an updatedTask object with the current state values
-        const updatedTask = { ...task, title, description, status, dueDate, priority };
-        
-        // Send a PUT request to update the task in the backend
         axios
-            .put(`http://localhost:8080/tasks/${task.id}`, updatedTask)
+            .get(`http://localhost:8080/api/tasks/${id}`)
             .then((response) => {
-                console.log("Task updated:", response.data);
-                // Call the onUpdate callback to update the parent component state
-                if (onUpdate) {
-                    onUpdate(response.data);
-                }
+                setTask(response.data);
+            })
+            .catch((error) => {
+                console.error("There was an error fetching the task!", error);
+            });
+    }, [id]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setTask((prevTask) => ({ ...prevTask, [name]: value }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        axios
+            .put(`http://localhost:8080/api/tasks/${id}`, task)
+            .then((response) => {
+                alert("Task updated successfully!");
+                navigate(`/task/${id}`);
             })
             .catch((error) => {
                 console.error("There was an error updating the task!", error);
             });
     };
 
-    // Render the form for updating the task
     return (
-        <form onSubmit={handleSubmit}>
-            <label>
-                Title:
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(event) => setTitle(event.target.value)}
-                    placeholder="Enter task title"
-                    required
-                />
-            </label>
-            <br />
-            <label>
-                Description:
-                <input
-                    type="text"
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                    placeholder="Enter task description"
-                />
-            </label>
-            <br />
-            <label>
-                Status:
-                <input
-                    type="text"
-                    value={status}
-                    onChange={(event) => setStatus(event.target.value)}
-                    placeholder="Enter task status"
-                />
-            </label>
-            <br />
-            <label>
-                Due Date:
-                <input
-                    type="date"
-                    value={dueDate}
-                    onChange={(event) => setDueDate(event.target.value)}
-                    placeholder="Enter task due date"
-                />
-            </label>
-            <br />
-            <label>
-                Priority:
-                <input
-                    type="text"
-                    value={priority}
-                    onChange={(event) => setPriority(event.target.value)}
-                    placeholder="Enter task priority"
-                />
-            </label>
-            <br />
-            <button type="submit">Update Task</button>
-        </form>
+        <div className="container">
+            <h2 className="my-4">Update Task</h2>
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label>Title:</label>
+                    <input
+                        type="text"
+                        name="title"
+                        value={task.title}
+                        onChange={handleChange}
+                        className="form-control"
+                        placeholder="Enter task title"
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label>Description:</label>
+                    <input
+                        type="text"
+                        name="description"
+                        value={task.description}
+                        onChange={handleChange}
+                        className="form-control"
+                        placeholder="Enter task description"
+                    />
+                </div>
+                <div className="form-group">
+                    <label>Status:</label>
+                    <select name="status" value={task.status} onChange={handleChange} className="form-control">
+                        <option value="Not Started">Not Started</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Parked">Parked</option>
+                        <option value="Done">Done</option>
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label>Due Date:</label>
+                    <input
+                        type="date"
+                        name="dueDate"
+                        value={task.dueDate}
+                        onChange={handleChange}
+                        className="form-control"
+                    />
+                </div>
+                <div className="form-group">
+                    <label>Priority:</label>
+                    <select name="priority" value={task.priority} onChange={handleChange} className="form-control">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <button type="submit" className="btn btn-primary">Update Task</button>
+                <button type="button" onClick={() => navigate(`/task/${id}`)} className="btn btn-secondary ml-2">Cancel</button>
+            </form>
+        </div>
     );
 };
 

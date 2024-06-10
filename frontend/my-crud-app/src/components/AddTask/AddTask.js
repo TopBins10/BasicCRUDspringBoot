@@ -1,21 +1,18 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 
-// The AddTask component allows users to add new tasks through a form
 const AddTask = () => {
-    // Using the useState hook to manage state for each field in the task form
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [status, setStatus] = useState("");
+    const [status, setStatus] = useState("Not Started");
     const [dueDate, setDueDate] = useState("");
-    const [priority, setPriority] = useState("");
+    const [priority, setPriority] = useState("Low");
+    const navigate = useNavigate();
 
-    // This function is called when the form is submitted
     const handleSubmit = (event) => {
-        event.preventDefault(); // Prevent the default form submission behavior
+        event.preventDefault();
 
-        // Creating a new task object from the state values
         const newTask = {
             title: title,
             description: description,
@@ -24,96 +21,90 @@ const AddTask = () => {
             priority: priority,
         };
 
-        // Using axios to send a POST request to the server with the new task data
+        console.log("Submitting new task:", newTask);
+
         axios
             .post("http://localhost:8080/tasks", newTask)
             .then((response) => {
-                console.log(response); // Logging the response from the server
-
-                // Clearing the form fields after a successful submission
+                console.log("Response from server:", response);
                 setTitle("");
                 setDescription("");
-                setStatus("");
+                setStatus("Not Started");
                 setDueDate("");
-                setPriority("");
-
-                // Providing feedback to the user
+                setPriority("Low");
                 alert("Task added successfully!");
+                navigate("/");
             })
             .catch((error) => {
-                // Logging any errors to the console
                 console.error("There was an error!", error);
             });
     };
 
     return (
-        <div>
-            <Link to="/">
-                <button>Home</button>
+        <div className="container">
+            <Link to="/" className="btn btn-secondary my-4">
+                Home
             </Link>
             <h1>Add Task</h1>
-            {/* Form for adding a new task */}
             <form onSubmit={handleSubmit}>
-                <label>
-                    Title:
-                    {/* Input field for task title */}
+                <div className="form-group">
+                    <label>Title:</label>
                     <input
                         type="text"
                         value={title}
                         onChange={(event) => setTitle(event.target.value)}
+                        className="form-control"
                         placeholder="Enter task title"
                         required
                     />
-                </label>
-                <br />
-                <label>
-                    Description:
-                    {/* Input field for task description */}
+                </div>
+                <div className="form-group">
+                    <label>Description:</label>
                     <input
                         type="text"
                         value={description}
                         onChange={(event) => setDescription(event.target.value)}
+                        className="form-control"
                         placeholder="Enter task description"
                     />
-                </label>
-                <br />
-                <label>
-                    Status:
-                    {/* Input field for task status */}
-                    <input
-                        type="text"
+                </div>
+                <div className="form-group">
+                    <label>Status:</label>
+                    <select
                         value={status}
                         onChange={(event) => setStatus(event.target.value)}
-                        placeholder="Enter task status"
-                        required
-                    />
-                </label>
-                <br />
-                <label>
-                    Due Date:
-                    {/* Input field for task due date */}
+                        className="form-control"
+                    >
+                        <option value="Not Started">Not Started</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Parked">Parked</option>
+                        <option value="Done">Done</option>
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label>Due Date:</label>
                     <input
                         type="date"
                         value={dueDate}
                         onChange={(event) => setDueDate(event.target.value)}
-                        placeholder="Enter task due date"
+                        className="form-control"
                     />
-                </label>
-                <br />
-                <label>
-                    Priority:
-                    {/* Input field for task priority */}
-                    <input
-                        type="text"
+                </div>
+                <div className="form-group">
+                    <label>Priority:</label>
+                    <select
                         value={priority}
                         onChange={(event) => setPriority(event.target.value)}
-                        placeholder="Enter task priority"
-                        required
-                    />
-                </label>
-                <br />
-                {/* Submit button to add the task */}
-                <button type="submit">Add Task</button>
+                        className="form-control"
+                    >
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <button type="submit" className="btn btn-primary">
+                    Add Task
+                </button>
             </form>
         </div>
     );

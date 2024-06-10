@@ -1,40 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const ListTasks = () => {
+const Dashboard = () => {
     const [tasks, setTasks] = useState([]);
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchTasks();
-    }, []);
-
-    const fetchTasks = () => {
         axios.get('http://localhost:8080/tasks')
             .then(response => {
-                setTasks(response.data);
-                setLoading(false);
+                const sortedTasks = response.data.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+                setTasks(sortedTasks.slice(0, 5));
             })
             .catch(error => {
                 console.error("There was an error fetching the tasks!", error);
-                setLoading(false);
             });
-    };
-
-    if (loading) {
-        return <div>Loading tasks...</div>;
-    }
+    }, []);
 
     return (
         <div className="container">
-            <h1 className="my-4">All Tasks</h1>
+            <h1 className="my-4">Dashboard</h1>
+            <Link to="/add-task" className="btn btn-primary mb-3">Add Task</Link>
+            <Link to="/list-tasks" className="btn btn-secondary mb-3 ml-2">View All Tasks</Link>
+            <h3>Deadline Approaching</h3>
             <table className="table table-striped">
                 <thead>
                     <tr>
                         <th>Task Name</th>
                         <th>Due Date</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,20 +38,12 @@ const ListTasks = () => {
                                 </Link>
                             </td>
                             <td>{task.dueDate}</td>
-                            <td>
-                                <Link to={`/task/${task.id}`} className="btn btn-info btn-sm">
-                                    View Details
-                                </Link>
-                            </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
-            <Link to="/" className="btn btn-secondary my-4">
-                Home
-            </Link>
         </div>
     );
 };
 
-export default ListTasks;
+export default Dashboard;
